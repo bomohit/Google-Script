@@ -2,12 +2,124 @@ function onOpen() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var menuEntries = [
     {name: "Add Student's at once (FIFO)", functionName: "addSheets"},
-    {name: "Delete Sheets", functionName: "delSheets"},
+//    {name: "Delete Sheets", functionName: "delSheets"},
     {name: "Create SpreadSheet", functionName: "createSpreadsheet"},
     {name: "Email SpreadSheet", functionName: "emailSpreadSheet"},
-    {name: "Insert Overall", functionName: "insertOverall"}
+//    {name: "Insert Overall", functionName: "insertOverall"},
+    {name: "Select Cell", functionName: "selectCell"},
+    {name: "Select ALL", functionName: "selectAll"},
+    {name: "Add to Block", functionName: "addToBlock"}
   ];
   ss.addMenu("EXTRA", menuEntries);
+}
+
+function addToBlock() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.setActiveSheet(ss.getSheetByName('NAMELIST'));
+  var sh  = ss.getActiveSheet();
+  
+  var uData = sh.getDataRange().getValues();
+  var block = []; // student block
+  var mNo = []; // student matric
+  var name = []; // student name
+  var cNo = []; // student contact no
+  var email = []; // student email
+  
+  for (var z = 1, zlen = uData.length; z<zlen; z++) {
+    if (uData[z][1] != "") {
+      block.push(uData[z][0]);
+      mNo.push(uData[z][1]);
+      name.push(uData[z][2]);
+      cNo.push(uData[z][3]);
+      email.push(uData[z][4]);
+    }
+    }
+  
+  // add to block
+  var cb = "";
+  var counter = 0;
+  for (var i = 0, iLen = block.length; i<iLen; i++) {
+    var ab = SpreadsheetApp.getActiveSpreadsheet();
+    ab.setActiveSheet(ab.getSheetByName('BLOCK '+block[i]));
+    var as = ab.getActiveSheet();
+    
+    if (block[i] == cb){
+      as.getRange(counter, 1).setValue(mNo[i]);
+      as.getRange(counter, 2).setValue(name[i]);
+      as.getRange(counter, 3).setValue(cNo[i]);
+      as.getRange(counter, 4).setValue(email[i]);
+      counter +=1;
+    } else {
+      cb = block[i];
+      counter = 3;
+      as.getRange(counter, 1).setValue(mNo[i]);
+      as.getRange(counter, 2).setValue(name[i]);
+      as.getRange(counter, 3).setValue(cNo[i]);
+      as.getRange(counter, 4).setValue(email[i]);
+      counter += 1;
+    }
+    
+  }
+  
+}
+
+function selectCell() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getActiveSheet();
+  var selectedCell = sh.getActiveCell().getRow()
+  var selectedCellName = sh.getActiveCell().getValue();
+  var selectedEmailAdd = sh.getRange(selectedCell, 5).getValue();
+  var selectedUrl = sh.getRange(selectedCell, 6).getValue();
+  var selectedId = sh.getRange(selectedCell, 7).getValue();
+  
+  /* Delete This to Enable
+  var file = DriveApp.getFileById(selectedId);
+  var addView =  file.addViewer(selectedEmailAdd); // add viewer for the file(specific to the target-user email)
+  var addCom = file.addCommenter(selectedEmailAdd)
+  
+  var message = "Use or Press the Link below to view your logbook\n\n\n\n"+selectedUrl; // logbook url / spreadsheet
+  var subject = 'LOGBOOK';
+  MailApp.sendEmail(selectedEmailAdd, subject, message)
+  */
+  ss.toast(selectedEmailAdd)
+}
+
+// SEND EMAIL TO ALL
+function selectAll() { 
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.setActiveSheet(ss.getSheetByName('NAMELIST'))
+  var sh = ss.getActiveSheet();
+  
+  var uData = sh.getDataRange().getValues();
+  var email = []; // student email
+  var sUrl = []; // student spreadsheet url
+  var sId = []; // spreadsheet id
+  
+  for (var u = 1, ulen=uData.length; u<ulen; u++) {
+       if(uData[u][1] != ""){
+         email.push(uData[u][4]);
+         sUrl.push(uData[u][5]);
+         sId.push(uData[u][6]);
+         
+       }
+  }
+  for(var e = 0, elen=email.length; e<elen; e++){
+//    var file = DriveApp.getFileById(sId[e]);
+//    var addView =  file.addViewer(email[e]); // add viewer for the file(specific to the target-user email)
+//    var addCom = file.addCommenter(email[e])
+//    var url = sUrl[e];
+
+    var emailAddress = email[e]; // student email
+    var message = "Use or Press the Link below to view your logbook\n\n\n\n"+sUrl[e]; // logbook url / spreadsheet
+    var subject = 'LOGBOOK';
+//    MailApp.sendEmail(emailAddress, subject, message);
+    Logger.log(emailAddress);
+    Logger.log(message);
+
+  }
+  
+  
+  
 }
 
 //FiFo
@@ -21,6 +133,7 @@ function addSheets() {
   var urlArr = []; // save spreadsheet url
   var sheetID = [];
   var mainUrl = ss.getUrl();
+  let cat1 = "NAME";
   
   var message = [];    
 //  for(var i=1, len=rData.length; i<len; i++) { // var i represent rows
@@ -29,47 +142,58 @@ function addSheets() {
 //      ss.toast(i);
       if(arr.length== 0 || (arr.indexOf(rData[i][2])+1) == 0){
         try {
+          let sName = rData[i][3];
 //          ss.toast(arr[i]);
-          ss.insertSheet(rData[i][2]);
-          arr.push(rData[i][2]); // stored the created sheet name
+          ss.insertSheet(sName);
+          arr.push(sName); // stored the created sheet name
           emailArr.push(rData[i][1]); // stored the email
           ss.setActiveSheet(ss.getSheets()[0]);
           
           // create individual sheet
           //copy the first row (header)
           var source = sh.getRange("A1:BH1");
-          ss.setActiveSheet(ss.getSheetByName(rData[i][2]));
+          ss.setActiveSheet(ss.getSheetByName(sName));
           source.copyTo(ss.getRange("A1:BH1"));
-          ss.getRange("A"+ 2).setFormula("=filter(DATA!A:BH,DATA!C:C=\""+rData[i][2]+"\")");
+          ss.getRange("A"+ 2).setFormula("=filter(DATA!A:BH,DATA!D:D=\""+sName+"\")");
           ss.getRange("A1:BH1").setBackgroundRGB(11, 83, 148).setFontColor("white");// customize color
           
           //create new spreadsheet for each individual 
-          var cs = SpreadsheetApp.create(rData[i][2]); // create sheet with student name as title
+          var cs = SpreadsheetApp.create(sName); // create sheet with student name as title
           var os = SpreadsheetApp.openByUrl(cs.getUrl()); // open created spreadsheet using url
           os.setActiveSheet(os.getSheets()[0]).setName("Data"); // change the first sheet name to "Data"
-          os.getRange("A"+1).setFormula("=IMPORTRANGE(\""+ss.getUrl()+"\",\""+rData[i][2]+"!A:BH\")");
+          os.getRange("A"+1).setFormula("=IMPORTRANGE(\""+ss.getUrl()+"\",\""+sName+"!A:BH\")");
           os.getRange("A1:BH1").setBackgroundRGB(11, 83, 148).setFontColor("white"); // customize color
           
           urlArr.push(cs.getUrl());
           sheetID.push(cs.getId());
           
-          //insert overall sheet
-          os.insertSheet('OVERALL');
-          os.setActiveSheet(os.getSheetByName('OVERALL'));
-          os.getRange("A"+1).setFormula("=IMPORTRANGE(\""+mainUrl+"\",\"OVERALL!A:B\")");
-          
-//          //update url in Namelist 
-//          var us = SpreadsheetApp.getActiveSpreadsheet();
-//          us.setActiveSheet(us.getSheetByName('NAMELIST'));
-//          var uh = us.getActiveSheet(); 
-//          var uData = uh.getDataRange().getValues();
+//          //insert overall sheet
+//          os.insertSheet('OVERALL');
+//          os.setActiveSheet(os.getSheetByName('OVERALL'));
+//          os.getRange("A"+1).setFormula("=IMPORTRANGE(\""+mainUrl+"\",\"OVERALL!A:B\")");
 //          
-//          for(var u = 0, ulen=uData.length; u<ulen; u++){
-//            if(uData[u][0] == rData[i][2]){
+          //update url in Namelist 
+          var us = SpreadsheetApp.getActiveSpreadsheet();
+          us.setActiveSheet(us.getSheetByName('NAMELIST'));
+          var uh = us.getActiveSheet(); 
+          var uData = uh.getDataRange().getValues();
+          
+          //check category
+          var categoryLink = null;  
+          for(var k = 0; k<5; k++) {
+            if (uData[0][k] == "LINK TO INDIVIDUAL SPREADSHEET") {
+              categoryLink = k;                       
+            }
+          }
+          
+          for(var u = 1, ulen=uData.length; u<ulen; u++){
+            if(uData[0][0] == cat1 && uData[u][0] == sName){ // if right category and name then execute
 //              us.getRange("E"+(u+1)).setValue(cs.getUrl());
-//            }
-//              
-//          }        
+//              uh.getRange(categoryLink, u).setValue(cs.getUrl());
+              uh.getRange(u+1, categoryLink+1).setValue(cs.getUrl());
+            }
+              
+          }        
                     
 //          Logger.log(uData.length);
 
@@ -79,29 +203,8 @@ function addSheets() {
       }    
     }else{break;}
   }
-    ss.setActiveSheet(ss.getSheets()[0]);
-  //enter email address for each student
-  var us = SpreadsheetApp.getActiveSpreadsheet();
-  us.setActiveSheet(us.getSheetByName('NAMELIST'));
-  var uh = us.getActiveSheet(); 
-  var uData = uh.getDataRange().getValues();
-          
-  for(var u = 0, ulen=uData.length; u<ulen; u++){
-    if(uData[u][0] != ""){
-    var loc = arr.indexOf(uData[u][0]); //get the location
-    us.getRange("D"+(u+1)).setValue(emailArr[loc]);
-    us.getRange("E"+(u+1)).setValue(urlArr[loc]);
-    us.getRange("F"+(u+1)).setValue(sheetID[loc]);
-    Logger.log(emailArr[loc]);  
-    }
-  }
-  
-  
-//  ss.toast("These sheets already exist: " + message);
-//  ss.setActiveSheet(ss.getSheets()[0]);
-  
-
 }
+
 
 //Del
 function delSheets() {
