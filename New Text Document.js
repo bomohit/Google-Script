@@ -1,14 +1,16 @@
 function onOpen() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var menuEntries = [
-    {name: "Add Student's at once (FIFO)", functionName: "addSheets"},
-//    {name: "Delete Sheets", functionName: "delSheets"},
+    {name: "Create Individual Sheet and Spreadsheet [1]", functionName: "addSheets"},
+    /* Until Further Notice
+    {name: "Delete Sheets", functionName: "delSheets"},
     {name: "Create SpreadSheet", functionName: "createSpreadsheet"},
     {name: "Email SpreadSheet", functionName: "emailSpreadSheet"},
-//    {name: "Insert Overall", functionName: "insertOverall"},
-    {name: "Select Cell", functionName: "selectCell"},
-    {name: "Select ALL", functionName: "selectAll"},
-    {name: "Add to Block", functionName: "addToBlock"}
+    {name: "Insert Overall", functionName: "insertOverall"},
+    */
+    {name: "Create and Add to Block [2]", functionName: "addToBlock"},
+    {name: "Email to Selected Cell in the NAMELIST or BLOCK", functionName: "selectCell"},
+    {name: "Email to Everyone in the NAMELIST or BLOCK", functionName: "selectAll"}
   ];
   ss.addMenu("EXTRA", menuEntries);
 }
@@ -35,6 +37,25 @@ function addToBlock() {
     }
     }
   
+  // create block
+  var tempBl = null;
+  for (var bl = 0; bl < block.length; bl++) {
+    if (block[bl] != tempBl) {
+      let blockName = "BLOCK "+ block[bl]
+      ss.insertSheet(blockName);
+      tempBl = block[bl];
+      Logger.log(blockName);
+      ss.setActiveSheet(ss.getSheetByName(blockName));
+      ss.getActiveSheet();
+      var blockNumber = Number(block[bl]);
+      ss.getRange("A"+2).setFormula("=filter(NAMELIST!A:G,NAMELIST!A:A="+blockNumber+")");
+      ss.getRange("A"+1).setFormula("=IMPORTRANGE(\""+ss.getUrl()+"\",\"NAMELIST!A1:G1\")");
+      ss.getRange("A1:G1").setBackgroundRGB(118, 146, 60).setFontColor("white");
+      
+    }
+  }
+  
+  /* DEPRECATED
   // add to block
   var cb = "";
   var counter = 0;
@@ -60,6 +81,7 @@ function addToBlock() {
     }
     
   }
+  */
   
 }
 
@@ -72,22 +94,28 @@ function selectCell() {
   var selectedUrl = sh.getRange(selectedCell, 6).getValue();
   var selectedId = sh.getRange(selectedCell, 7).getValue();
   
-  /* Delete This to Enable
-  var file = DriveApp.getFileById(selectedId);
-  var addView =  file.addViewer(selectedEmailAdd); // add viewer for the file(specific to the target-user email)
-  var addCom = file.addCommenter(selectedEmailAdd)
+  let currentSheetName = sh.getName();
   
-  var message = "Use or Press the Link below to view your logbook\n\n\n\n"+selectedUrl; // logbook url / spreadsheet
-  var subject = 'LOGBOOK';
-  MailApp.sendEmail(selectedEmailAdd, subject, message)
-  */
-  ss.toast(selectedEmailAdd)
+    // CHECK IF THE FUNCTION EXECUTE IN CORRECT SHEET OR NOT
+  if (currentSheetName == "NAMELIST" || currentSheetName.includes("BLOCK"))
+  {
+    /* Delete This to Enable
+    var file = DriveApp.getFileById(selectedId);
+    var addView =  file.addViewer(selectedEmailAdd); // add viewer for the file(specific to the target-user email)
+    var addCom = file.addCommenter(selectedEmailAdd)
+    
+    var message = "Use or Press the Link below to view your logbook\n\n\n\n"+selectedUrl; // logbook url / spreadsheet
+    var subject = 'LOGBOOK';
+    MailApp.sendEmail(selectedEmailAdd, subject, message)
+    */
+    ss.toast(selectedEmailAdd)
+  }
 }
 
 // SEND EMAIL TO ALL
 function selectAll() { 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  ss.setActiveSheet(ss.getSheetByName('NAMELIST'))
+//  ss.setActiveSheet(ss.getSheetByName('NAMELIST'))
   var sh = ss.getActiveSheet();
   
   var uData = sh.getDataRange().getValues();
@@ -95,29 +123,37 @@ function selectAll() {
   var sUrl = []; // student spreadsheet url
   var sId = []; // spreadsheet id
   
-  for (var u = 1, ulen=uData.length; u<ulen; u++) {
-       if(uData[u][1] != ""){
-         email.push(uData[u][4]);
-         sUrl.push(uData[u][5]);
-         sId.push(uData[u][6]);
-         
-       }
-  }
-  for(var e = 0, elen=email.length; e<elen; e++){
-//    var file = DriveApp.getFileById(sId[e]);
-//    var addView =  file.addViewer(email[e]); // add viewer for the file(specific to the target-user email)
-//    var addCom = file.addCommenter(email[e])
-//    var url = sUrl[e];
-
-    var emailAddress = email[e]; // student email
-    var message = "Use or Press the Link below to view your logbook\n\n\n\n"+sUrl[e]; // logbook url / spreadsheet
-    var subject = 'LOGBOOK';
-//    MailApp.sendEmail(emailAddress, subject, message);
-    Logger.log(emailAddress);
-    Logger.log(message);
-
-  }
+  let currentSheetName = ss.getActiveSheet().getName();
   
+  // CHECK IF THE FUNCTION EXECUTE IN CORRECT SHEET OR NOT
+  if (currentSheetName == "NAMELIST" || currentSheetName.includes("BLOCK"))
+  {
+    for (var u = 1, ulen=uData.length; u<ulen; u++) {
+      if(uData[u][1] != ""){
+        email.push(uData[u][4]);
+        sUrl.push(uData[u][5]);
+        sId.push(uData[u][6]);
+        
+      }
+    }
+    for(var e = 0, elen=email.length; e<elen; e++){
+      //    var file = DriveApp.getFileById(sId[e]);
+      //    var addView =  file.addViewer(email[e]); // add viewer for the file(specific to the target-user email)
+      //    var addCom = file.addCommenter(email[e])
+      //    var url = sUrl[e];
+      
+      var emailAddress = email[e]; // student email
+      var message = "Use or Press the Link below to view your logbook\n\n\n\n"+sUrl[e]; // logbook url / spreadsheet
+      var subject = 'LOGBOOK';
+      //    MailApp.sendEmail(emailAddress, subject, message);
+      Logger.log(emailAddress);
+      Logger.log(message);
+      ss.toast(emailAddress);
+      
+    }    
+    
+    
+  }
   
   
 }
@@ -136,17 +172,18 @@ function addSheets() {
   let cat1 = "NAME";
   
   var message = [];    
-//  for(var i=1, len=rData.length; i<len; i++) { // var i represent rows
-  for(var i=1, len=rData.length; i<len; i++) {
+//  for(var i=1, len=rData.length; i<len; i++) { // ENABLE THIS FOR FULL SCAN
+  for(var i=1, len=3; i<len; i++) { // for testing only: scan 2 only
     if(rData[i][0] != "" || rData[i][1] != "" || rData[i][2] != "") { 
 //      ss.toast(i);
       if(arr.length== 0 || (arr.indexOf(rData[i][2])+1) == 0){
         try {
-          let sName = rData[i][3];
+//          let sName = rData[i][3];
+          let sName = rData[i][2];
 //          ss.toast(arr[i]);
           ss.insertSheet(sName);
           arr.push(sName); // stored the created sheet name
-          emailArr.push(rData[i][1]); // stored the email
+          emailArr.push(rData[i][4]); // stored the email
           ss.setActiveSheet(ss.getSheets()[0]);
           
           // create individual sheet
@@ -180,17 +217,27 @@ function addSheets() {
           
           //check category
           var categoryLink = null;  
-          for(var k = 0; k<5; k++) {
+          var categoryName = null;
+          for(var k = 0; k<10; k++) {
             if (uData[0][k] == "LINK TO INDIVIDUAL SPREADSHEET") {
               categoryLink = k;                       
             }
           }
+          for(var kn = 0; kn<10; kn++) {
+            if (uData[0][kn] == cat1) {
+              categoryName = kn;                       
+            }
+          }
+          Logger.log(categoryLink);
+          Logger.log(categoryName);
+          Logger.log(cs.getUrl());
           
           for(var u = 1, ulen=uData.length; u<ulen; u++){
-            if(uData[0][0] == cat1 && uData[u][0] == sName){ // if right category and name then execute
+            if(uData[u][categoryName] == sName){ // if right category and name then execute
 //              us.getRange("E"+(u+1)).setValue(cs.getUrl());
 //              uh.getRange(categoryLink, u).setValue(cs.getUrl());
               uh.getRange(u+1, categoryLink+1).setValue(cs.getUrl());
+              
             }
               
           }        
