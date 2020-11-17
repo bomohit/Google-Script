@@ -1,14 +1,11 @@
-Add to Block :
-	add student to specific block ( NAMELIST )
+Create Individual Sheet and Spreadsheet [1] :
+	create Student Individual sheet and Individual Spreadsheet and Add Spreadsheet Link into Namelist
 
-Select All:
-	email to everyone in the sheet ( in Block )
+Create and Add to Block [2] :
+	create block based on number of block 
 
-Select Cell:
-	email to selected name in the sheet ( NAMELIST )
+Email to Selected Cell in the NAMELIST or BLOCK :
+	email to selected name in the sheet ( NAMELIST or BLOCK )
 
-Add Student's at once (FIFO):
-	create student sheet for each ( DATA ) in the spreadsheet
-
-Create SpreadSheet:
-	Create individual SpreadSheet for each student
+Email to Everyone in the NAMELIST or BLOCK :
+	email to everyone in the namelist or block 
