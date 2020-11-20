@@ -172,8 +172,8 @@ function addSheets() {
   let cat1 = "NAME";
   
   var message = [];    
-//  for(var i=1, len=rData.length; i<len; i++) { // ENABLE THIS FOR FULL SCAN
-  for(var i=1, len=3; i<len; i++) { // for testing only: scan 2 only
+  for(var i=1, len=rData.length; i<len; i++) { // ENABLE THIS FOR FULL SCAN
+//  for(var i=1, len=3; i<len; i++) { // for testing only: scan 2 only
     if(rData[i][0] != "" || rData[i][1] != "" || rData[i][2] != "") { 
 //      ss.toast(i);
       if(arr.length== 0 || (arr.indexOf(rData[i][2])+1) == 0){
