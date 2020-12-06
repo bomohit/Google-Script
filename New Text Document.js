@@ -137,10 +137,10 @@ function selectAll() {
       }
     }
     for(var e = 0, elen=email.length; e<elen; e++){
-      //    var file = DriveApp.getFileById(sId[e]);
-      //    var addView =  file.addViewer(email[e]); // add viewer for the file(specific to the target-user email)
-      //    var addCom = file.addCommenter(email[e])
-      //    var url = sUrl[e];
+//    var file = DriveApp.getFileById(sId[e]);
+//    var addView =  file.addViewer(email[e]); // add viewer for the file(specific to the target-user email)
+//    var addCom = file.addCommenter(email[e])
+//    var url = sUrl[e];
       
       var emailAddress = email[e]; // student email
       var message = "Use or Press the Link below to view your logbook\n\n\n\n"+sUrl[e]; // logbook url / spreadsheet
@@ -173,7 +173,7 @@ function addSheets() {
   
   var message = [];    
   for(var i=1, len=rData.length; i<len; i++) { // ENABLE THIS FOR FULL SCAN
-//  for(var i=1, len=3; i<len; i++) { // for testing only: scan 2 only
+//  for(var i=1, len=2; i<len; i++) { // for testing only: scan 2 only
     if(rData[i][0] != "" || rData[i][1] != "" || rData[i][2] != "") { 
 //      ss.toast(i);
       if(arr.length== 0 || (arr.indexOf(rData[i][2])+1) == 0){
@@ -185,13 +185,23 @@ function addSheets() {
           arr.push(sName); // stored the created sheet name
           emailArr.push(rData[i][4]); // stored the email
           ss.setActiveSheet(ss.getSheets()[0]);
-          
+          let sBlock = rData[i][0];
           // create individual sheet
           //copy the first row (header)
           var source = sh.getRange("A1:BH1");
           ss.setActiveSheet(ss.getSheetByName(sName));
-          source.copyTo(ss.getRange("A1:BH1"));
-          ss.getRange("A"+ 2).setFormula("=filter(DATA!A:BH,DATA!D:D=\""+sName+"\")");
+//          source.copyTo(ss.getRange("A1:BH1"));
+          ss.getRange("A"+ 1).setFormula("=filter(DATA!A1:BY1,DATA!D1=\"Name\")");
+          if (sBlock == 1) {
+           ss.getRange("A"+ 2).setFormula("=filter(DATA!A:BH,DATA!D:D=\""+sName+"\")"); 
+          } else if ( sBlock == 2) {
+            ss.getRange("A"+ 2).setFormula("=filter(DATA!A:BH,DATA!E:E=\""+sName+"\")"); 
+          } else if ( sBlock == 3) {
+            ss.getRange("A"+ 2).setFormula("=filter(DATA!A:BH,DATA!F:F=\""+sName+"\")"); 
+          } else if ( sBlock == 4) {
+            ss.getRange("A"+ 2).setFormula("=filter(DATA!A:BH,DATA!G:G=\""+sName+"\")"); 
+          }
+          
           ss.getRange("A1:BH1").setBackgroundRGB(11, 83, 148).setFontColor("white");// customize color
           
           //create new spreadsheet for each individual 
